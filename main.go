@@ -26,24 +26,38 @@ func main() {
 			http.FileServer(http.Dir(*directory)).ServeHTTP(w, r)
 			return
 		}
-		err := r.ParseForm()
-		if err != nil {
-			w.WriteHeader(500)
+
+		// Ensure the request is a multipart form-data request
+		if !strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+			http.Error(w, "Expected multipart/form-data content type", http.StatusBadRequest)
 			return
 		}
+
+		log.Println(r.Header)
 		f, h, err := r.FormFile("file")
 		if err != nil {
-			w.WriteHeader(500)
+			log.Println("Error retrieving the file:", err)
+			http.Error(w, "Error retrieving the file", http.StatusInternalServerError)
 			return
 		}
+		defer f.Close()
+
 		b, err := io.ReadAll(f)
 		if err != nil {
-			w.WriteHeader(500)
+			log.Println("Error reading the file:", err)
+			http.Error(w, "Error reading the file", http.StatusInternalServerError)
 			return
 		}
+
 		arr := strings.Split(h.Filename, ".")
 		name := uuid.NewString() + "." + arr[len(arr)-1]
-		os.WriteFile(DIRECTORY+name, b, os.ModePerm)
+		err = os.WriteFile(DIRECTORY+name, b, os.ModePerm)
+		if err != nil {
+			log.Println("Error saving the file:", err)
+			http.Error(w, "Error saving the file", http.StatusInternalServerError)
+			return
+		}
+
 		w.Write([]byte(name))
 	})
 	http.Handle("/", mux)
