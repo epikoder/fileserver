@@ -61,6 +61,8 @@ func main() {
 		w.Write([]byte(name))
 	})
 	http.Handle("/", mux)
-	log.Printf("Serving %s on HTTP port: %s\n", *directory, *port)
-	log.Fatal(http.ListenAndServe(":"+*port, nil))
+	log.Println("Starting FileServer...")
+	_port := "[::]:" + *port
+	log.Printf("Serving %s on HTTP %s\n", *directory, _port)
+	log.Fatal(http.ListenAndServe(_port, nil))
 }
