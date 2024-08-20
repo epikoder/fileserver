@@ -14,7 +14,14 @@ import (
 const DIRECTORY = "public/"
 
 func main() {
-	port := flag.String("p", "8100", "port to serve on")
+	_port := "8100"
+	for i, v := range os.Args {
+		if v == "-p" {
+			_port = os.Args[i+1]
+		}
+	}
+
+	port := flag.String("p", _port, "port to serve on")
 	directory := flag.String("d", DIRECTORY, "the directory of static file to host")
 	flag.Parse()
 
@@ -62,7 +69,7 @@ func main() {
 	})
 	http.Handle("/", mux)
 	log.Println("Starting FileServer...")
-	_port := "[::]:" + *port
-	log.Printf("Serving %s on HTTP %s\n", *directory, _port)
-	log.Fatal(http.ListenAndServe(_port, nil))
+	address := "0.0.0.0:" + *port
+	log.Printf("Serving %s on HTTP %s\n", *directory, address)
+	log.Fatal(http.ListenAndServe(address, nil))
 }
